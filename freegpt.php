@@ -10,6 +10,7 @@ https://github.com/diveloper53/freegpt
 // Small config:
 define('REQUEST_URL', 'https://chat.chatgptdemo.net/chat_api_stream');
 define('CHAT_ID', '651828e2be877feed46b2b96');
+define('REQUEST_METHOD', 'POST');
 // Small config.
 
 function makeRequest($question) {
