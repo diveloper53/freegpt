@@ -1,22 +1,22 @@
 <?php
 
-define('CHATGPTDEMO_BASE_URL', 'https://chatgptdemo.info/chat/');
+define('FREEGPT_BASE_URL', 'https://chatgptdemo.info/chat/');
 
-define('CHATGPTDEMO_NEW_CHAT_URL', CHATGPTDEMO_BASE_URL . 'new_chat');
-define('CHATGPTDEMO_GET_CHAT_URL', CHATGPTDEMO_BASE_URL . 'get_chat');
-define('CHATGPTDEMO_UPDATE_CHAT_NAME_URL', CHATGPTDEMO_BASE_URL . 'update_chat_name');
-define('CHATGPTDEMO_DELETE_CHAT_URL', CHATGPTDEMO_BASE_URL . 'delete_chat');
-define('CHATGPTDEMO_GET_USER_CHAT_URL', CHATGPTDEMO_BASE_URL . 'get_user_chat');
-define('CHATGPTDEMO_UPDATE_MESSAGES_URL', CHATGPTDEMO_BASE_URL . 'update_messages');
-define('CHATGPTDEMO_UPDATE_SHARE_CHAT_URL', CHATGPTDEMO_BASE_URL . 'update_share_chat');
-define('CHATGPTDEMO_CHAT_API_STREAM_URL', CHATGPTDEMO_BASE_URL . 'chat_api_stream');
+define('FREEGPT_NEW_CHAT_URL', FREEGPT_BASE_URL . 'new_chat');
+define('FREEGPT_GET_CHAT_URL', FREEGPT_BASE_URL . 'get_chat');
+define('FREEGPT_UPDATE_CHAT_NAME_URL', FREEGPT_BASE_URL . 'update_chat_name');
+define('FREEGPT_DELETE_CHAT_URL', FREEGPT_BASE_URL . 'delete_chat');
+define('FREEGPT_GET_USER_CHAT_URL', FREEGPT_BASE_URL . 'get_user_chat');
+define('FREEGPT_UPDATE_MESSAGES_URL', FREEGPT_BASE_URL . 'update_messages');
+define('FREEGPT_UPDATE_SHARE_CHAT_URL', FREEGPT_BASE_URL . 'update_share_chat');
+define('FREEGPT_CHAT_API_STREAM_URL', FREEGPT_BASE_URL . 'chat_api_stream');
 
-class ChatGPTDemo {
+class freegpt {
     public static $user_id = null;
     public static $chat_id = null;
 
     /**
-     * Initialize a new instance of the chatgptdemo class.
+     * Initialize a new instance of the freegpt class.
      *
      * @param string|null $user_id The user ID. If not provided, it is created automatically.
      */
@@ -33,7 +33,7 @@ class ChatGPTDemo {
      */
     public static function create_user_id() {
         try {
-            $html = file_get_contents(CHATGPTDEMO_BASE_URL);
+            $html = file_get_contents(FREEGPT_BASE_URL);
             $dom = new DOMDocument();
             @$dom->loadHTML($html);
             $userIdElement = $dom->getElementById('USERID');
@@ -43,7 +43,7 @@ class ChatGPTDemo {
                 throw new Exception("USERID element not found.");
             }
         } catch (Exception $e) {
-            throw new Exception("[CHATGPTDEMO] Failed to create user id: " . $e->getMessage());
+            throw new Exception("[FREEGPT] Failed to create user id: " . $e->getMessage());
         }
     }
 
@@ -55,16 +55,16 @@ class ChatGPTDemo {
      * @throws Exception If the request fails or the response is invalid.
      */
     public static function create_chat_id($user_id) {
-        $response = self::make_post_request(CHATGPTDEMO_NEW_CHAT_URL, ['user_id' => $user_id]);
+        $response = self::make_post_request(FREEGPT_NEW_CHAT_URL, ['user_id' => $user_id]);
         if (!$response) {
-            throw new Exception("[CHATGPTDEMO] Failed to create chat id");
+            throw new Exception("[FREEGPT] Failed to create chat id");
         }
 
         $data = json_decode($response, true);
         if (isset($data['id_'])) {
             return $data['id_'];
         } else {
-            throw new Exception("[CHATGPTDEMO] Failed to get chat id from json");
+            throw new Exception("[FREEGPT] Failed to get chat id from json");
         }
     }
 
@@ -78,10 +78,10 @@ class ChatGPTDemo {
      * @throws Exception If an unexpected finish reason is encountered.
      */
     public static function askGPT($question, $user_id = null, $chat_id = null) {
-        $user_id = $user_id ?? self::$user_id;
-        $chat_id = $chat_id ?? self::$chat_id;
+        $user_id = $user_id ?? (self::$user_id ?? self::create_user_id());
+        $chat_id = $chat_id ?? (self::$chat_id ?? self::create_chat_id($user_id));
 
-        $response = self::make_post_request(CHATGPTDEMO_CHAT_API_STREAM_URL, [
+        $response = self::make_post_request(FREEGPT_CHAT_API_STREAM_URL, [
             'chat_id' => $chat_id,
             'question' => $question,
             'timestamp' => time(),
@@ -98,7 +98,7 @@ class ChatGPTDemo {
             if (isset($data['choices'][0]['delta']['content'])) {
                 $answer .= $data['choices'][0]['delta']['content'];
             } else if (isset($data['choices'][0]['finish_reason']) && $data['choices'][0]['finish_reason'] != "stop") {
-                throw new Exception("[CHATGPTDEMO] Unexpected finish reason: " . $data['choices'][0]['finish_reason']);
+                throw new Exception("[FREEGPT] Unexpected finish reason: " . $data['choices'][0]['finish_reason']);
             }
         }
 
@@ -125,4 +125,3 @@ class ChatGPTDemo {
         return file_get_contents($url, false, $context);
     }
 }
-
